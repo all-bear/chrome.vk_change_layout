@@ -51,13 +51,10 @@ var selectionBorders = {
 	},
 
     getElementSelectionOffsetWithHtml: function(element, selectionOffset, isLast) {
-        console.log("element:" + $(element).html());
-        console.log("element:" + $(element).text());
+        
         var nodeToCheck = this.findNodeToCheck(element);
-        console.log("selection offset:" + selectionOffset);
 
         if (!elementChecker.isGoodElement(nodeToCheck)) {
-            console.log("select dont valid element");
             if (isLast) {
                 return 99999999; // bad idea, its mean that all element are selected TODO
             }
@@ -65,16 +62,13 @@ var selectionBorders = {
         }
 
         if (!($(nodeToCheck).find("br").length) && !($(nodeToCheck).find("div").length) && !($(nodeToCheck).find("a").length)) {
-            console.log("dont contains br or div,yeah");
-            console.log("element offset:" + selectionOffset);
+           
             return selectionOffset + htmlUtils.htmlSpecialCharactersLengthIncremetn(element.textContent.substring(0, selectionOffset));
         }
 
         var htmlBeforeElement = this.getPreviusNodesHtml(element);
 
         var elementOffsetWithHtml = htmlBeforeElement.length + selectionOffset;
-
-        console.log("element Offset With Html:" + elementOffsetWithHtml);
 
         return elementOffsetWithHtml + htmlUtils.htmlSpecialCharactersLengthIncremetn(element.textContent.substring(0, selectionOffset));
     },
@@ -124,13 +118,8 @@ var selectionBorders = {
             }   
      
 
-        console.log("find start offset");
         this.startOffset = this.getElementSelectionOffsetWithHtml(this.startElement, startOffsetWithoutHtml);
-        console.log("find end length");
         this.endLength = this.getElementSelectionOffsetWithHtml(this.endElement, endLengthWithoutHtml, true);
-
-        console.log("startOffset:" + this.startOffset);
-        console.log("endLength:" + this.endLength);
 
     },
     getPreviusNodesHtml: function(element) {
@@ -166,9 +155,6 @@ var selectionBorders = {
             element = element.parentNode;
         }
 
-
-
-        console.log("previus html:" + previusHtml);
         return previusHtml;
     },
 
@@ -284,7 +270,6 @@ var selectionBorders = {
             return selectedElements.indexOf(item) == pos;
         })
 
-        console.log("filtered elements" + selectedElements);
         return selectedElements;
     }
 
@@ -316,7 +301,7 @@ var layotChanger = {
 
     //Критерий определения - первый символ который содержится в одной раскладке
     getLayotFromText: function(text) {
-        console.log("get layot from text:" + text);
+        
         for (var i = 0, len = text.length; i < len; i++) {
             var charaster = text.charAt(i);
             var indexInRuLayot = this.ru.indexOf(charaster);
@@ -332,7 +317,7 @@ var layotChanger = {
 
             }
         }
-        console.log("cant determine layot,return default");
+       
         return this.undeterminateLayot;
     },
 
@@ -344,7 +329,6 @@ var layotChanger = {
 			return html;
 		}
 
-		console.log("+++++++++++++++++++++++++++++determineLayotFromElements");
         var objectThis = this;
         $(selectedElements).each(function(index) {
             var elementText = deleteTagsFromHtml($(this).html());
@@ -358,12 +342,6 @@ var layotChanger = {
             if (index == selectedElements.length - 1) {
                 selectionLength = selectionLengthIn;
             }
-            
-            console.log("+++++++++++++++++++++++++++++element index "+index);
-            console.log("+++++++++++++++++++++++++++++element text "+$(this).html());
-            console.log("+++++++++++++++++++++++++++++selectionFrom "+selectionFrom);
-            console.log("+++++++++++++++++++++++++++++selectionLength "+selectionLength);
-            console.log("+++++++++++++++++++++++++++++cutted text "+elementText.substring(selectionFrom, selectionLength));
 
             objectThis.currentLayot = objectThis.getLayotFromText(elementText.substring(selectionFrom, selectionLength));
             if (objectThis.currentLayot != objectThis.undeterminateLayot) {
@@ -371,9 +349,6 @@ var layotChanger = {
             }
         });
         this.newLayot = this.getAnotherLayot(this.currentLayot);
-
-        console.log("current layot:" + this.currentLayot);
-        console.log("new layot:" + this.newLayot);
     },
 
 
@@ -381,7 +356,6 @@ var layotChanger = {
     changeLayot: function(text) {
         var newText = "";
 
-        console.log("change text:" + text);
 
         for (var i = 0, len = text.length; i < len; i++) {
             var replaceLocaleIndex = this.currentLayot.indexOf(text.charAt(i));
@@ -394,7 +368,6 @@ var layotChanger = {
             newText += this.newLayot.charAt(replaceLocaleIndex);
         }
 
-        console.log("to text:" + newText);
         return newText;
     },
 };
@@ -403,7 +376,7 @@ var elementChecker = function() {
     var obj = {
         rules: [],
         Rule: function(ruleName) {
-            console.log("Create rule:" + ruleName);
+           
             this.name = ruleName;
             this.elementClass = null;
             this.elementId = null;
@@ -415,28 +388,28 @@ var elementChecker = function() {
             }
 
             this.setElementClass = function(param) {
-                console.log("setElementClass:" + param);
+                
                 this.elementClass = param;
 
                 return this;
             }
 
             this.setElementId = function(param) {
-                console.log("setElementId:" + param);
+                
                 this.elementId = param;
 
                 return this;
             }
 
             this.setElementParentId = function(param) {
-                console.log("setElementParentId:" + param);
+                
                 this.elementParentId = param;
 
                 return this;
             }
 
             this.setElementClosestTagId = function(tag, id) {
-                console.log("setElementClosestTagId tag:" + tag + " id:" + id);
+                
                 this.elementClosestTagId.tag = tag;
                 this.elementClosestTagId.id = id;
 
@@ -445,7 +418,7 @@ var elementChecker = function() {
         },
         //determine how indexOh or == choise posability
         initialize: function() {
-            console.log("____________begin initialize elementChecker________________");
+            
 
             this.rules.push(new this.Rule("Write message on opponent's page").setElementId("mail_box_editable"));
             this.rules.push(new this.Rule("Write message on dialog").setElementId("im_editable"));
@@ -461,7 +434,7 @@ var elementChecker = function() {
             this.rules.push(new this.Rule("Write wall comment").setElementId("reply_field"));
             this.rules.push(new this.Rule("Posted wall comment").setElementParentId("wpt").setElementClass("wall_reply_text"));
 
-            console.log("____________end initialize elementChecker________________");
+            
             return this;
         },
 
@@ -469,54 +442,53 @@ var elementChecker = function() {
 
             function checkElementWithRule(element, rule) {
                 function checkElementId(element, ruleId) {
-                    console.log("checkElementId with ruleId:" + ruleId + " for" + element);
+                    
                     var elementsId = $(element).attr("id");
                     if (ruleId) {
                         if (element && elementsId) {
-                            console.log(elementsId.indexOf(ruleId) == 0);
                             return elementsId.indexOf(ruleId) == 0;
                         }
-                        console.log(false);
+                        
                         return false;
                     }
-                    console.log(true);
+                    
                     return true;
                 }
 
                 function checkElementClass(element, ruleClassName) {
-                    console.log("checkElementClass with ruleClassName:" + ruleClassName + " for" + element);
+                    
                     if (ruleClassName) {
                         var elementsClass = $(element).attr("class");
                         if (element && elementsClass) {
-                            console.log(elementsClass.indexOf(ruleClassName) == 0);
+                          
                             return elementsClass.indexOf(ruleClassName) == 0;
                         }
-                        console.log(false);
+                        
                         return false;
                     }
 
-                    console.log(true);
+                    
                     return true;
                 }
 
                 function checkElementParentId(element, ruleId) {
-                    console.log("checkElementParentId with ruleId:" + ruleId + " for" + element);
+                    
                     if (element) {
-                        console.log(checkElementId(element.parentNode, ruleId));
+                        
                         return checkElementId(element.parentNode, ruleId);
                     }
-                    console.log(false);
+                    
                     return false;
                 }
 
                 function checkElementClosestTagId(element, ruleClosestTag, ruleId) {
-                    console.log("checkElementClosestTagId with ruleClosestTag:" + ruleClosestTag + " and ruleId:" + ruleId + " for" + element);
+                    
                     if (element) {
                         element = $(element).closest(ruleClosestTag);
-                        console.log(checkElementId(element, ruleId));
+                        
                         return checkElementId(element, ruleId);
                     }
-                    console.log(false);
+                    
                     return false;
                 }
 
@@ -527,15 +499,14 @@ var elementChecker = function() {
 
             checkStatus = false;
             this.rules.forEach(function(rule) {
-                console.log("check for rule:" + rule.name + "________________________________");
+                
                 if (checkElementWithRule(checkedElement, rule)) {
                     checkStatus = true;
-                    console.log(true + " rule checked__________________");
+                    
                 };
-                console.log(false + " rule checked__________________");
+                
             });
-
-            console.log(checkStatus + "______________elemetn is good__________________");
+ 
             return checkStatus;
         }
     };
@@ -566,8 +537,7 @@ var textReplacer = {
 
         var countOfSelectedElements = selectedElements.size();
 
-        console.log(countOfSelectedElements + " elements to replace");
-
+       
         if (countOfSelectedElements == 0) {
             return;
         }
@@ -601,31 +571,13 @@ var textReplacer = {
             currentLength = length;
         }
 
-        console.log("replace text");
-
-
         var notSelectedHtmlBegin = html.substring(0, currentOffset);
         var selectedHtml = html.substring(currentOffset, currentOffset + currentLength);
-        var notSelectedHtmlEnd = html.substring(currentOffset + currentLength, html.length);
-
-        console.log("offset:" + currentOffset);
-        console.log("length:" + currentLength);
-        console.log("html length:" + html.length);
-
-        console.log("notSelectedHtmlBegin:" + notSelectedHtmlBegin);
-        console.log("selected html:" + selectedHtml);
-        console.log("notSelectedHtmlEnd:" + notSelectedHtmlEnd);
-        console.log("html before replace:" + html);
-
-        console.log("html what i use:" + notSelectedHtmlBegin + selectedHtml + notSelectedHtmlEnd);
+        var notSelectedHtmlEnd = html.substring(currentOffset + currentLength, html.length);   
 
         var selectedHtmlAfterReplace = this.replaceTextInHtml(selectedHtml);
 
-        console.log("html after replace:" + notSelectedHtmlBegin + selectedHtmlAfterReplace + notSelectedHtmlEnd);
-
         textElement.html(notSelectedHtmlBegin + selectedHtmlAfterReplace + notSelectedHtmlEnd);
-
-        console.log("really html after replace:" + textElement.html());
     },
 
     regexEncode: function(text) {
@@ -681,14 +633,10 @@ var textReplacer = {
             return status;
         };
 
-        console.log("splitedHtml:" + splitedHtml);
-
         splitedHtml = splitedHtml.map(function(entry) {
             if (isHtmlTag(entry)) {
                 return entry;
             }
-
-            console.log("change text:" + entry + " to " + htmlUtils.htmlEncode(layotChanger.changeLayot(htmlUtils.htmlDecode(entry))));
 
             return htmlUtils.htmlEncode(layotChanger.changeLayot(htmlUtils.htmlDecode(entry)));
         });
@@ -713,13 +661,11 @@ function replaceTextInPage() {
 chrome.runtime.onMessage.addListener(
     function(request, sender, sendResponse) {
         if (request.message === "changeLayot") {
-            console.time('Function #1');
-            console.log("selected text :" + request.text);
 
             replaceTextInPage();
 			
 			selectionBorders.clearSelection();
-            console.timeEnd('Function #1');
+			
             request.message = null;
         }
 
