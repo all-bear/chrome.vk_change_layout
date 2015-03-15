@@ -1,16 +1,14 @@
-function genericOnClick(info, tab) {
-	
-    chrome.tabs.executeScript(null,
-                              {"file": "content.js"},
-                              function() {
-                                  chrome.tabs.sendMessage(tab.id,{"message":"changeLayot","text":info.selectionText});
-                              });
-}
+(function (chrome) {
+    console.log('start background');
+    chrome.contextMenus.create({
+        title: "Изменить раскладку",
+        contexts: ["selection"],
+        "documentUrlPatterns": ["*://vk.com/*"],
+        "id": "contextId"
+    });
 
-var showForPages = ["*://vk.com/*"];
-chrome.contextMenus.create({title: "Изменить раскладку", 
-    			    contexts:["selection"],
-			    "documentUrlPatterns":showForPages, 
-                            "id":"contextId"});
+    chrome.contextMenus.onClicked.addListener(function (info, tab) {
+        chrome.tabs.sendMessage(tab.id, {message: "change_layout"});
+    });
+})(chrome);
 
-chrome.contextMenus.onClicked.addListener(genericOnClick);
