@@ -1,4 +1,4 @@
-(function (chrome) {
+(function(chrome) {
     var layoutChanger, selection, replacer, htmlUtils;
 
     function LayotChanger() {
@@ -11,8 +11,8 @@
 
             var symbol, i, length, isRu, isEn;
 
-            currentLayout = null;
-            translateToLayout = null;
+            currentLayout = '';
+            translateToLayout = '';
 
             text = text.replace(' ', '');
 
@@ -33,39 +33,34 @@
         }
 
         //TODO for different layouts
-        this.initLayout = function (elements, from, to) {
-
-            from = htmlUtils.getHtmlOffset(elements[0].innerHTML, from);
-            to = htmlUtils.getHtmlOffset(elements[elements.length - 1].innerHTML, to);
-
+        this.initLayout = function(elements, from, to) {
             if (elements.length == 1) {
-                if (htmlUtils.isValidElement(elements[0]) && htmlUtils.isSelectedText(elements[0].innerHTML) && initLayoutFromText(elements[0].innerHTML.substr(from, to - from))) {
-                    return;
+                if (initLayoutFromText(elements[0].textContent.substr(from, to - from))) {
+                    return true;
                 }
-                ;
+
             } else {
-                if (htmlUtils.isValidElement(elements[0]) && htmlUtils.isSelectedText(elements[0].innerHTML) && initLayoutFromText(elements[0].innerHTML.substr(from))) {
-                    return;
+                if (initLayoutFromText(elements[0].textContent.substr(from))) {
+                    return true;
                 }
-                ;
 
                 for (var i = 1; i < elements.length - 1; i++) {
-                    if (htmlUtils.isValidElement(elements[i]) && htmlUtils.isSelectedText(elements[i].innerHTML) && initLayoutFromText(elements[i].innerHTML)) {
-                        return;
+                    if (initLayoutFromText(elements[i].textContent)) {
+                        return true;
                     }
-                    ;
+
                 }
 
-                if (htmlUtils.isValidElement(elements[elements.length - 1]) && htmlUtils.isSelectedText(elements[elements.length - 1].innerHTML) && initLayoutFromText(elements[elements.length - 1].innerHTML.substr(0, to))) {
-                    return;
+                if (initLayoutFromText(elements[elements.length - 1].textContent.substr(0, to))) {
+                    return true;
                 }
-                ;
+
             }
 
-            throw new Error('Not inited layout');
+            return false;
         };
 
-        this.change = function (text) {
+        this.change = function(text) {
             var translated = '', letterIndex;
             for (var i = 0, length = text.length; i < length; i++) {
                 letterIndex = currentLayout.indexOf(text[i]);
@@ -78,56 +73,49 @@
 
     function Selection() {
         function isFromTopSelection(selection, elements) {
-            var anchorEl, focusEl;
             if (elements.length == 1) {
                 return selection.anchorOffset < selection.focusOffset;
             }
 
-            anchorEl = selection.anchorNode.nodeType == 1 ? selection.anchorNode : selection.anchorNode.parentNode;
-            focusEl = selection.focusNode.nodeType == 1 ? selection.focusNode : selection.focusNode.parentNode;
-
-            return elements.indexOf(anchorEl) < elements.indexOf(focusEl);
+            return elements.indexOf(selection.anchorNode) < elements.indexOf(selection.focusNode);
         }
 
         /**
-         * @return Object{startOffset,endOffset,elements}
+         * @return Object{startOffset,endOffset,elements, originSelection}
          */
-        this.getSelection = function () {
+        this.getSelection = function() {
             var selection = window.getSelection(),
                 range = selection.getRangeAt(0),
                 parent = range.commonAncestorContainer,
-                elements = [],
+                elements = htmlUtils.getAllTextChilds(parent),
                 startOffset,
                 endOffset,
+                startElement,
+                endElement,
                 selectedFromTop;
 
-            if (parent.nodeType != 1) {
-                parent = parent.parentNode;
-            }
-
-            if (selection.anchorNode == selection.focusNode) {//one elements selected
-                elements.push(parent);
-                console.log(parent);
-            } else {
-                var allWithinRangeParent = parent.getElementsByTagName("*");
-console.log(allWithinRangeParent);
-                for (var i = 0, el; el = allWithinRangeParent[i]; i++) {
-                    if (selection.containsNode(el, true)) {
-                        elements.push(el);
-                    }
+            elements = elements.filter(function(el) {
+                if (selection.containsNode(el, true)) {
+                    return true;
                 }
-            }
+            });
 
             selectedFromTop = isFromTopSelection(selection, elements);
 
-            startOffset = htmlUtils.isValidElement(elements[0]) ?
-                (selectedFromTop ? selection.anchorOffset : selection.focusOffset) :
-                0;
-            endOffset = htmlUtils.isValidElement(elements[elements.length - 1]) ?
-                (selectedFromTop ? selection.focusOffset : selection.anchorOffset) :
-                Number.MAX_SAFE_INTEGER; //TODO use element real length
+            startElement = selectedFromTop ? selection.anchorNode : selection.focusNode;
+            endElement = selectedFromTop ? selection.focusNode : selection.anchorNode;
+
+            startOffset = htmlUtils.isValidElement(startElement) ?
+                (selectedFromTop ? selection.anchorOffset : selection.focusOffset) : 0;
+            endOffset = htmlUtils.isValidElement(endElement) ?
+                (selectedFromTop ? selection.focusOffset : selection.anchorOffset) : Number.MAX_SAFE_INTEGER; //TODO
+                                                                                                              // use
+                                                                                                              // element
+                                                                                                              // real
+                                                                                                              // length
 
             return {
+                origin: selection,
                 elements: elements,
                 startOffset: startOffset,
                 endOffset: endOffset
@@ -136,98 +124,76 @@ console.log(allWithinRangeParent);
     }
 
     function HtmlUtils() {
-        var emptyTagRegex = /^\s+$/;
-        this.tagRegexGlobal = /(<\/?.*?\/?>)/g;
-        this.tagRegex = /<\/?.*?\/?>/;
+        function recurcyGetTextChilds(el, childs, self) {
+            var i, child;
 
-        this.getOnlyText = function (element) {
-            var ret, self;
-            if (typeof element == 'array' || typeof element == 'object') {
-                ret = '';
-                self = this;
-
-                element.forEach(
-                    function (el) {
-                        ret += el.innerHTML.replace(self.tagRegexGlobal, '');
-                    });
-                return ret;
-            }
-            return element.innerHTML.replace(this.tagRegexGlobal, '');
-        };
-
-        this.getHtmlOffset = function (html, textOffset) {
-
-            var splitedTags = this.splitByTags(html), tagsBefore = 0;
-            if (splitedTags.length == 1) {
-                return textOffset;
-            }
-
-            for (var length = splitedTags.length; tagsBefore < length; tagsBefore++) {
-                if (this.isSelectedText(splitedTags[tagsBefore])) {
-                    break;
+            if (!el.childNodes.length) {
+                if (self.isValidElement(el)) {
+                    childs.push(el);
                 }
-            }
-            while (tagsBefore-- > 0) {
-                textOffset += splitedTags[tagsBefore].length;
-            }
-
-            return textOffset;
-        };
-
-        //TODO
-        this.isValidElement = function (el) {
-            return el.className == 'im_msg_text';
-        };
-
-        this.isSelectedText = function (text) {
-
-            return !this.tagRegex.test(text) && !emptyTagRegex.test(text) && text.length > 0;
-        };
-
-        this.splitByTags = function (html) {
-
-            return html.split(this.tagRegexGlobal);
-        }
-    }
-
-    function Replacer() {
-        function _replaceText(html) {
-            var splited = htmlUtils.splitByTags(html), replacedText = '';
-
-            splited.forEach(
-                function (text) {
-                    if (htmlUtils.isSelectedText(text)) {
-                        replacedText += layoutChanger.change(text);
-                    } else {
-                        replacedText += text;
-                    }
-                }
-            );
-
-            return replacedText;
-        }
-
-        this.replaceTextInElement = function (el, from, to) {
-            var text = el.innerHTML;
-
-            if (!htmlUtils.isValidElement(el)) {
                 return;
             }
 
-            text = el.innerHTML;
+            for (i = 0; i < el.childNodes.length; i++) {
+                child = el.childNodes[i];
 
-            from = from ? htmlUtils.getHtmlOffset(text, from) : 0;
-            to = to ? htmlUtils.getHtmlOffset(text, to) : text.length;
+                if (!child.childNodes.length) {
+                    if (self.isValidElement(child)) {
+                        childs.push(child);
+                    }
+                } else {
+                    recurcyGetTextChilds(child, childs, self);
+                }
+            }
+        }
 
-            el.innerHTML = text.substr(0, from) + _replaceText(text.substr(from, to - from)) + text.substr(to, text.length);
+        this.getAllTextChilds = function(el) {
+            var childs = [];
+
+            recurcyGetTextChilds(el, childs, this);
+            return childs;
+        };
+
+        //TODO
+        this.isValidElement = function(el) {
+            return el.nodeType === 3 && ( //only text element
+                el.parentNode.className == 'im_msg_text' || // sended message
+                el.parentNode.className == 'im_editable' || // message input
+                el.parentNode.parentNode.className == 'im_editable' || // next line message input
+
+                el.parentNode.className == 'wall_post_text' || // sended wall post
+                el.parentNode.className == 'wall_reply_text' || // sended wall comment
+                el.parentNode.className == 'fl_l reply_field' || // wall comment input
+                el.parentNode.parentNode.className == 'fl_l reply_field' || // next line wall comment input
+
+                el.parentNode.className == 'pv_commtext' || // sended photo comment
+                el.parentNode.id == 'pv_comment' || // photo comment input
+                el.parentNode.parentNode.id == 'pv_comment' || // next line photo comment input
+
+                el.parentNode.className == 'mv_commtext' || // sended photo comment
+                el.parentNode.id == 'mv_comment' || // photo comment input
+                el.parentNode.parentNode.id == 'mv_comment' // next line photo comment input
+                );
+        };
+    }
+
+    function Replacer() {
+        function _replaceText(text) {
+            return layoutChanger.change(text);
+        }
+
+        this.replaceTextInElement = function(el, from, to) {
+            var text = el.textContent,
+                from = from === undefined ? 0 : from,
+                to = to === undefined ? text.length : to;
+
+            el.textContent = text.substr(0, from) + _replaceText(text.substr(from, to - from)) + text.substr(to, text.length);
         }
     }
 
     function replaceText() {
         var sel = selection.getSelection();
-console.log(sel.elements);
-        if (sel.elements.length) {
-            layoutChanger.initLayout(sel.elements, sel.startOffset, sel.endOffset);
+        if (sel.elements.length && layoutChanger.initLayout(sel.elements, sel.startOffset, sel.endOffset)) {
             if (sel.elements.length == 1) {
                 replacer.replaceTextInElement(sel.elements[sel.elements.length - 1], sel.startOffset, sel.endOffset);
             } else {
@@ -237,7 +203,7 @@ console.log(sel.elements);
                 }
                 replacer.replaceTextInElement(sel.elements[sel.elements.length - 1], 0, sel.endOffset);
             }
-
+            sel.origin.removeAllRanges();
         }
     }
 
@@ -248,7 +214,7 @@ console.log(sel.elements);
         htmlUtils = new HtmlUtils();
 
         chrome.runtime.onMessage.addListener(
-            function (request) {
+            function(request) {
                 if (request.message === "change_layout") {
                     replaceText();
                 }
