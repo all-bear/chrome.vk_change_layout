@@ -157,6 +157,8 @@
         //TODO
         this.isValidElement = function(el) {
             return el.nodeType === 3 && ( //only text element
+                el.parentNode.id == 'mail_box_editable' || // message from page
+
                 el.parentNode.className == 'im_msg_text' || // sended message
                 el.parentNode.className == 'im_editable' || // message input
                 el.parentNode.parentNode.className == 'im_editable' || // next line message input
