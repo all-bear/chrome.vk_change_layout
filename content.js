@@ -74,7 +74,7 @@
     function Selection() {
         function isFromTopSelection(selection, elements) {
             if (elements.length == 1) {
-                return selection.anchorOffset < selection.focusOffset;
+                return selection.anchorOffset < (selection.focusOffset || selection.extentOffset);
             }
 
             return elements.indexOf(selection.anchorNode) < elements.indexOf(selection.focusNode);
@@ -106,9 +106,9 @@
             endElement = selectedFromTop ? selection.focusNode : selection.anchorNode;
 
             startOffset = htmlUtils.isValidElement(startElement) ?
-                (selectedFromTop ? selection.anchorOffset : selection.focusOffset) : 0;
+                (selectedFromTop ? selection.anchorOffset : (selection.focusOffset || selection.extentOffset)) : 0;
             endOffset = htmlUtils.isValidElement(endElement) ?
-                (selectedFromTop ? selection.focusOffset : selection.anchorOffset) : Number.MAX_SAFE_INTEGER; //TODO
+                (selectedFromTop ? (selection.focusOffset || selection.extentOffset) : selection.anchorOffset) : Number.MAX_SAFE_INTEGER; //TODO
                                                                                                               // use
                                                                                                               // element
                                                                                                               // real
