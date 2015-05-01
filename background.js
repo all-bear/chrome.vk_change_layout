@@ -1,5 +1,4 @@
 (function (chrome) {
-    console.log('start background');
     chrome.contextMenus.create({
         title: "Изменить раскладку",
         contexts: ["selection"],
