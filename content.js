@@ -154,8 +154,7 @@
             return childs;
         };
 
-        //TODO
-        this.isValidElement = function(el) {
+        this.isValidV1Element = function(el) {
             return el.nodeType === 3 && ( //only text element
                 el.parentNode.id == 'mail_box_editable' || // message from page
 
@@ -175,8 +174,25 @@
                 el.parentNode.className == 'mv_commtext' || // sended photo comment
                 el.parentNode.id == 'mv_comment' || // photo comment input
                 el.parentNode.parentNode.id == 'mv_comment' // next line photo comment input
+            );
+        };
+
+        this.isValidV2Element = function(el) {
+            return el.nodeType === 3 && ( //only text element
+                el.parentNode.id == 'mail_box_editable' || // message from page
+
+                el.parentNode.className == 'im_msg_text' || // sended message
+                el.parentNode.className == 'im_editable im-chat-input--text _im_text' || // message input
+
+                el.parentNode.className == 'wall_post_text' || // sended wall post
+                el.parentNode.className == 'wall_reply_text' || // sended wall comment
+                el.parentNode.className == 'reply_field submit_post_field'
                 );
         };
+
+        this.isValidElement = function (el) {
+            return this.isValidV1Element(el) || this.isValidV2Element(el);
+        }
     }
 
     function Replacer() {
