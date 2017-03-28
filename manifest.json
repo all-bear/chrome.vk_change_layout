@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Изменение раскладки VK",
   "description": "Изменение раскладки клавиатуры текста в один клик прямо на странице Вконтакте.",
-  "version": "0.2.1.4",
+  "version": "0.2.1.5",
   "background": {
     "scripts": ["background.js"],
     "persistent": false
