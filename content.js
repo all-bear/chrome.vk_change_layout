@@ -182,6 +182,7 @@
                 el.parentNode.id == 'mail_box_editable' || // message from page
 
                 el.parentNode.className == 'im_msg_text' || // sended message
+                el.parentNode.className == 'im-mess--text wall_module _im_log_body' || // sended message
                 el.parentNode.className == 'im_editable im-chat-input--text _im_text' || // message input
 
                 el.parentNode.className == 'wall_post_text' || // sended wall post
